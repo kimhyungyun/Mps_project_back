@@ -1,0 +1,94 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Payment } from './payment.entity';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { User } from '../user/user.entity';
+import { Lecture } from '../lecture/lecture.entity';
+import { PaymentStatus } from './payment-status.enum';
+
+@Injectable()
+export class PaymentService {
+  constructor(
+    @InjectRepository(Payment)
+    private paymentRepository: Repository<Payment>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Lecture)
+    private lectureRepository: Repository<Lecture>,
+  ) {}
+
+  async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
+    const user = await this.userRepository.findOne({
+      where: { idNumber: createPaymentDto.userId },
+    });
+    if (!user) {
+      throw new NotFoundException(`User not found`);
+    }
+
+    const lecture = await this.lectureRepository.findOne({
+      where: { id: createPaymentDto.lectureId },
+    });
+    if (!lecture) {
+      throw new NotFoundException(`Lecture not found`);
+    }
+
+    const payment = this.paymentRepository.create({
+      ...createPaymentDto,
+      user,
+      lecture,
+      paymentStatus: PaymentStatus.PENDING,
+    });
+    return await this.paymentRepository.save(payment);
+  }
+
+  async findAll(): Promise<Payment[]> {
+    return await this.paymentRepository.find({
+      relations: ['user', 'lecture'],
+    });
+  }
+
+  async findOne(id: number): Promise<Payment> {
+    const payment = await this.paymentRepository.findOne({
+      where: { id },
+      relations: ['user', 'lecture'],
+    });
+    if (!payment) {
+      throw new NotFoundException(`Payment not found`);
+    }
+    return payment;
+  }
+
+  async update(id: number, updatePaymentDto: UpdatePaymentDto): Promise<Payment> {
+    const payment = await this.findOne(id);
+
+    if (updatePaymentDto.userId) {
+      const user = await this.userRepository.findOne({
+        where: { idNumber: updatePaymentDto.userId },
+      });
+      if (!user) {
+        throw new NotFoundException(`User not found`);
+      }
+      payment.user = user;
+    }
+
+    if (updatePaymentDto.lectureId) {
+      const lecture = await this.lectureRepository.findOne({
+        where: { id: updatePaymentDto.lectureId },
+      });
+      if (!lecture) {
+        throw new NotFoundException(`Lecture not found`);
+      }
+      payment.lecture = lecture;
+    }
+
+    Object.assign(payment, updatePaymentDto);
+    return await this.paymentRepository.save(payment);
+  }
+
+  async remove(id: number): Promise<void> {
+    const payment = await this.findOne(id);
+    await this.paymentRepository.remove(payment);
+  }
+} 
