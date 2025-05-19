@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Lecture } from './lecture.entity';
-import { CreateLectureDto } from './dto/create-lecture.dto';
-import { UpdateLectureDto } from './dto/update-lecture.dto';
-import { User } from '../user/user.entity';
-import { LectureCategory } from './lecture-category.entity';
+import { Lecture } from '@/lecture/entity/lecture.entity';
+import { CreateLectureDto } from '@/lecture/dto/create-lecture.dto';
+import { UpdateLectureDto } from '@/lecture/dto/update-lecture.dto';
+
+import { LectureCategory } from '@/lecture/entity/lecture-category.entity';
+import { User } from '@/user/entity/user.entity';
 
 @Injectable()
 export class LectureService {
@@ -33,8 +34,9 @@ export class LectureService {
       throw new NotFoundException(`Category not found`);
     }
 
+    const { instructorId, categoryId, ...lectureData } = createLectureDto;
     const lecture = this.lectureRepository.create({
-      ...createLectureDto,
+      ...lectureData,
       instructor,
       category,
     });
@@ -42,9 +44,10 @@ export class LectureService {
   }
 
   async findAll(): Promise<Lecture[]> {
-    return await this.lectureRepository.find({
+    const lectures = await this.lectureRepository.find({
       relations: ['instructor', 'category'],
     });
+    return lectures;
   }
 
   async findOne(id: number): Promise<Lecture> {
@@ -58,12 +61,17 @@ export class LectureService {
     return lecture;
   }
 
-  async update(id: number, updateLectureDto: UpdateLectureDto): Promise<Lecture> {
+  async update(
+    id: number,
+    updateLectureDto: UpdateLectureDto,
+  ): Promise<Lecture> {
     const lecture = await this.findOne(id);
+    const { instructorId, categoryId, ...updateData } =
+      updateLectureDto as CreateLectureDto;
 
-    if (updateLectureDto.instructorId) {
+    if (instructorId) {
       const instructor = await this.userRepository.findOne({
-        where: { idNumber: updateLectureDto.instructorId },
+        where: { idNumber: instructorId },
       });
       if (!instructor) {
         throw new NotFoundException(`Instructor not found`);
@@ -71,9 +79,9 @@ export class LectureService {
       lecture.instructor = instructor;
     }
 
-    if (updateLectureDto.categoryId) {
+    if (categoryId) {
       const category = await this.categoryRepository.findOne({
-        where: { id: updateLectureDto.categoryId },
+        where: { id: categoryId },
       });
       if (!category) {
         throw new NotFoundException(`Category not found`);
@@ -81,7 +89,7 @@ export class LectureService {
       lecture.category = category;
     }
 
-    Object.assign(lecture, updateLectureDto);
+    Object.assign(lecture, updateData);
     return await this.lectureRepository.save(lecture);
   }
 
@@ -89,4 +97,4 @@ export class LectureService {
     const lecture = await this.findOne(id);
     await this.lectureRepository.remove(lecture);
   }
-} 
+}

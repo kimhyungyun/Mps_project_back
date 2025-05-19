@@ -3,12 +3,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
-import { User } from '../user/user.entity';
-import { LectureType } from './lecture-type.enum';
+import { User } from '@/user/entity/user.entity';
+import { LectureType } from '../enum/lecture-type.enum';
 import { LectureCategory } from './lecture-category.entity';
+import { Payment } from '@/payment/entity/payment.entity';
 
 @Entity()
 export class Lecture {
@@ -25,10 +26,10 @@ export class Lecture {
   price: number;
 
   @Column()
-  thumbnailUrl: string;
+  thumbnail_url: string;
 
   @Column()
-  videoUrl: string;
+  video_url: string;
 
   @Column({
     type: 'enum',
@@ -43,11 +44,11 @@ export class Lecture {
   category: LectureCategory;
 
   @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  created_at: Date;
 
   @ManyToOne(() => User, (user) => user.lectures)
   instructor: User;
+
+  @OneToMany(() => Payment, (payment) => payment.lecture)
+  payments: Payment[];
 }

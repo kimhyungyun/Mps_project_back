@@ -5,8 +5,10 @@ import {
   Column,
   ManyToOne,
 } from 'typeorm';
-import { User } from 'src/user/user.entity';
-import { Lecture } from 'src/lecture/lecture.entity';
+
+import { Lecture } from '@/lecture/entity/lecture.entity';
+import { User } from '@/user/entity/user.entity';
+
 
 @Entity()
 export class Enrollment {

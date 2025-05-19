@@ -1,5 +1,5 @@
 import { IsString, IsNumber, IsEnum, IsUrl } from 'class-validator';
-import { LectureType } from '../lecture-type.enum';
+import { LectureType } from '../enum/lecture-type.enum';
 
 export class CreateLectureDto {
   @IsString()
@@ -12,10 +12,10 @@ export class CreateLectureDto {
   price: number;
 
   @IsUrl()
-  thumbnailUrl: string;
+  thumbnail_url: string;
 
   @IsUrl()
-  videoUrl: string;
+  video_url: string;
 
   @IsEnum(LectureType)
   type: LectureType;
@@ -25,4 +25,4 @@ export class CreateLectureDto {
 
   @IsNumber()
   instructorId: number;
-} 
+}

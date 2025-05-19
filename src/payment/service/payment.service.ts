@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Payment } from './payment.entity';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { User } from '../user/user.entity';
-import { Lecture } from '../lecture/lecture.entity';
-import { PaymentStatus } from './payment-status.enum';
+import { Payment } from '../entity/payment.entity';
+import { CreatePaymentDto } from '../dto/create-payment.dto';
+import { UpdatePaymentDto } from '../dto/update-payment.dto';
+
+import { Lecture } from '@/lecture/entity/lecture.entity';
+import { PaymentStatus } from '../enum/payment-status.enum';
+import { User } from '@/user/entity/user.entity';
 
 @Injectable()
 export class PaymentService {
@@ -34,8 +35,9 @@ export class PaymentService {
       throw new NotFoundException(`Lecture not found`);
     }
 
+    const { userId, lectureId, ...paymentData } = createPaymentDto;
     const payment = this.paymentRepository.create({
-      ...createPaymentDto,
+      ...paymentData,
       user,
       lecture,
       paymentStatus: PaymentStatus.PENDING,
@@ -60,12 +62,17 @@ export class PaymentService {
     return payment;
   }
 
-  async update(id: number, updatePaymentDto: UpdatePaymentDto): Promise<Payment> {
+  async update(
+    id: number,
+    updatePaymentDto: UpdatePaymentDto,
+  ): Promise<Payment> {
     const payment = await this.findOne(id);
+    const { userId, lectureId, ...updateData } =
+      updatePaymentDto as CreatePaymentDto;
 
-    if (updatePaymentDto.userId) {
+    if (userId) {
       const user = await this.userRepository.findOne({
-        where: { idNumber: updatePaymentDto.userId },
+        where: { idNumber: userId },
       });
       if (!user) {
         throw new NotFoundException(`User not found`);
@@ -73,9 +80,9 @@ export class PaymentService {
       payment.user = user;
     }
 
-    if (updatePaymentDto.lectureId) {
+    if (lectureId) {
       const lecture = await this.lectureRepository.findOne({
-        where: { id: updatePaymentDto.lectureId },
+        where: { id: lectureId },
       });
       if (!lecture) {
         throw new NotFoundException(`Lecture not found`);
@@ -83,7 +90,7 @@ export class PaymentService {
       payment.lecture = lecture;
     }
 
-    Object.assign(payment, updatePaymentDto);
+    Object.assign(payment, updateData);
     return await this.paymentRepository.save(payment);
   }
 
@@ -91,4 +98,4 @@ export class PaymentService {
     const payment = await this.findOne(id);
     await this.paymentRepository.remove(payment);
   }
-} 
+}

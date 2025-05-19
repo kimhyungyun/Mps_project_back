@@ -3,24 +3,17 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { User } from 'src/user/user.entity';
-import { Comment } from 'src/comment/comment.entity';
-import { PostCategory } from './post-category.enum';
+import { User } from '@/user/entity/user.entity';
+import { Comment } from '@/comment/entity/comment.entity';
+import { PostCategory } from '../enum/post-category.enum';
 
 @Entity()
 export class Post {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => User)
-  user: User;
-
-  @Column({ type: 'enum', enum: PostCategory })
-  category: PostCategory;
 
   @Column()
   title: string;
@@ -28,11 +21,17 @@ export class Post {
   @Column('text')
   content: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @Column({
+    type: 'enum',
+    enum: PostCategory,
+  })
+  category: PostCategory;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @CreateDateColumn()
+  created_at: Date;
+
+  @ManyToOne(() => User, (user) => user.posts)
+  user: User;
 
   @OneToMany(() => Comment, (comment) => comment.post)
   comments: Comment[];

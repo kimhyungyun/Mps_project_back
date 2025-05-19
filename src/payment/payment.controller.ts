@@ -7,9 +7,10 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { PaymentService } from './payment.service';
+
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { PaymentService } from './service/payment.service';
 
 @Controller('payments')
 export class PaymentController {
@@ -39,4 +40,4 @@ export class PaymentController {
   remove(@Param('id') id: string) {
     return this.paymentService.remove(+id);
   }
-} 
+}

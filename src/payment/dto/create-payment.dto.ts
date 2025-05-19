@@ -1,5 +1,5 @@
 import { IsNumber, IsEnum } from 'class-validator';
-import { PaymentMethod } from '../payment-method.enum';
+import { PaymentMethod } from '../enum/payment-method.enum';
 
 export class CreatePaymentDto {
   @IsNumber()
@@ -13,4 +13,4 @@ export class CreatePaymentDto {
 
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
-} 
+}
